@@ -1,0 +1,10 @@
+pydantic_core
+python-dotenv
+langgraph
+mcp
+langchain-mcp-adapters
+langchain-openai
+langchain_core
+langchain
+pydantic
+jsonschema-pydantic

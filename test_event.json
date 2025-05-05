@@ -1,0 +1,13 @@
+{
+  "sequence_id": "test-seq",
+  "client_id": "client-xyz",
+  "product_id": "sales_ai",
+  "initial_state": {
+    "incoming_message": {
+      "content": "Yes, I would like to schedule an appointment.",
+      "channel": "email",
+      "timestamp": "2025-05-01T12:00:00Z"
+    },
+    "journey_instruction": "Customer is writing from a social network, their category of interest is luxury cars and leasing"
+  }
+}

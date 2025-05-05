@@ -1,0 +1,28 @@
+service: mock-sequence-service
+
+provider:
+  name: aws
+  runtime: python3.12
+  region: us-west-2
+
+functions:
+  runSequence:
+    handler: app.lambda_handler
+    events:
+      - http:
+          path: process
+          method: post
+
+plugins:
+  - serverless-python-requirements
+
+custom:
+  pythonRequirements:
+    dockerizePip: true
+
+package:
+  exclude:
+    - venv/**
+    - tests/**
+    - .venv/**
+    - __pycache__/**
