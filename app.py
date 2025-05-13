@@ -1,3 +1,5 @@
+from dotenv import load_dotenv
+
 from sequence_runner import SequenceRunner
 import traceback
 import nest_asyncio
@@ -5,6 +7,7 @@ import nest_asyncio
 
 async def lambda_handler(event, _context):
     nest_asyncio.apply()
+    load_dotenv()
     sequence_id = event["sequence_id"]
     client_id = event["client_id"]
     product_id = event["product_id"]
