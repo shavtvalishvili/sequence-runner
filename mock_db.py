@@ -6,13 +6,18 @@ SEQUENCES = {
         "id": "test-seq",
         "steps": [
             # Required: [type, id]
-            {"type": "agent", "id": "detect_unsubscribe", "output_key": "unsubscribe_result"},
+            {"type": "agent", "id": "detect_unsubscribe", "output_key": "unsubscribe_result",
+             "arguments": {"incoming_message": {"type": "dynamic", "value": 'incoming_message["content"]'}}},
             {"type": "tool", "id": "detect_opt_out"},
-            {"type": "tool", "id": "get_journey_instruction", "skip_conditions": {"detect_opt_out_result": False}},
-            {"type": "agent", "id": "reply_agent", "output_key": "reply"},
-            # {"type": "agent", "id": "assess_human_takeover"},
-            # {"type": "tool",  "id": "append_signature"},
-            # {"type": "tool",  "id": "send_reply"},
+            {"type": "tool", "id": "get_journey_instruction", "skip_conditions": {"detect_opt_out_result": True},
+             "arguments": {"client_id": {"type": "static", "value": "bobola-dealership"}},
+             "output_key": "journey_instructions"},
+            {"type": "agent", "id": "reply_agent", "output_key": "reply",
+             "skip_conditions": {"detect_opt_out_result": True},
+             "arguments": {"incoming_message": {"type": "dynamic", "value": 'incoming_message["content"]'}}},
+            {"type": "agent", "id": "assess_human_takeover", "skip_conditions": {"detect_opt_out_result": True}},
+            {"type": "tool", "id": "append_signature"},
+            {"type": "tool", "id": "send_reply"},
         ],
     }
 }
@@ -32,12 +37,12 @@ AGENTS = {
             ),
             (
                 'user',
-                '{incoming_message[content]}'
+                '{incoming_message}'
             )
         ],
         "tools": [],
         "sub-agents": [],
-        "dependencies": ["incoming_message[content]"],
+        "dependencies": [{"key": "incoming_message", "default_value": None, "override": False}],
         "output-schema": json.dumps({
             "type": "object",
             "properties": {
@@ -58,13 +63,17 @@ AGENTS = {
             ),
             (
                 'user',
-                '{incoming_message[content]}'
+                '{incoming_message}'
             )
         ],
         "tools": ["get_conversation_history", "get_appointment_hours", "get_inventory_information",
                   "schedule_appointment", "get_current_time", ],
         "sub-agents": [],
-        "dependencies": ["get_journey_instruction_result", "incoming_message.content"],
+        "dependencies": [
+            {"key": "preferred_tone", "default_value": "polite", "override": True},
+            {"key": "journey_instruction", "default_value": None, "override": False},
+            {"key": "incoming_message", "default_value": None, "override": False}
+        ],
         "output-schema": json.dumps({
             "type": "object",
             "properties": {
@@ -89,11 +98,22 @@ AGENTS = {
         "id": "assess_human_takeover",
         "name": "HumanTakeoverAssessor",
         "model": "openai:gpt-4.1",
-        "prompt": [(
-            'user',
-            ("Given 'reply.missing_information' in the state, decide if human takeover is needed. "
-             "If yes, call the 'set_hto' tool and set {{ 'hto_required': True }}; else {{ 'hto_required': False }}.")
-        )],
+        "prompt": [
+            (
+                'system',
+                ("Given the list of missing information, decide if human takeover is needed meaning that there's a "
+                 "significant lack of information and conversation quality would benefit from a dealership "
+                 "representative who can reply and fill the gaps. "
+                 "If yes, call the 'set_hto' tool and set 'hto_required' to True else set 'hto_required' to False.")
+            ),
+            (
+                'user',
+                'Missing information: {reply[missing_information]}'
+            )
+        ],
+        "dependencies": [
+            {"key": "reply[missing_information]", "default_value": None, "override": False},
+        ],
         "sub-agents": [],
         "output-schema": json.dumps({
             "type": "object",

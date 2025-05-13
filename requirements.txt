@@ -8,3 +8,4 @@ langchain_core
 langchain
 pydantic
 jsonschema-pydantic
+nest-asyncio
