@@ -1,4 +1,4 @@
-from mock_db import AGENTS, SEQUENCES, CLIENT_CONFIGS
+from src.data.mock_db import AGENTS, SEQUENCES, CLIENT_CONFIGS
 
 class SequenceConfigLoader:
     def __init__(self):

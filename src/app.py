@@ -1,6 +1,6 @@
 from dotenv import load_dotenv
 
-from sequence_runner import SequenceRunner
+from src.sequence.sequence_runner import SequenceRunner
 import traceback
 import nest_asyncio
 

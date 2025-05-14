@@ -1,4 +1,4 @@
-from session_state import SessionState
+from src.state.session_state import SessionState
 
 
 def check_skip_conditions(step: dict, state: SessionState) -> bool:

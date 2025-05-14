@@ -1,5 +1,5 @@
 import json
-from constants import SYSTEM_PROMPT_BASE, SYSTEM_PROMPT_JOURNEY_INSTRUCTIONS
+from src.data.constants import SYSTEM_PROMPT_BASE, SYSTEM_PROMPT_JOURNEY_INSTRUCTIONS
 
 SEQUENCES = {
     "test-seq": {
