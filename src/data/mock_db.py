@@ -8,16 +8,18 @@ SEQUENCES = {
             # Required: [type, id]
             {"type": "agent", "id": "detect_unsubscribe", "output_key": "unsubscribe_result",
              "arguments": {"incoming_message": {"type": "dynamic", "value": 'incoming_message["content"]'}}},
-            {"type": "tool", "id": "detect_opt_out"},
-            {"type": "tool", "id": "get_journey_instruction", "skip_conditions": {"detect_opt_out_result": True},
+            {"type": "tool", "id": "demo-detect_opt_out"},
+            {"type": "tool", "id": "demo-get_journey_instruction",
+             "skip_conditions": {"demo-detect_opt_out_result": True},
              "arguments": {"client_id": {"type": "static", "value": "bobola-dealership"}},
              "output_key": "journey_instructions"},
             {"type": "agent", "id": "reply_agent", "output_key": "reply",
-             "skip_conditions": {"detect_opt_out_result": True},
+             "skip_conditions": {"demo-detect_opt_out_result": True},
              "arguments": {"incoming_message": {"type": "dynamic", "value": 'incoming_message["content"]'}}},
-            {"type": "agent", "id": "assess_human_takeover", "skip_conditions": {"detect_opt_out_result": True}},
-            {"type": "tool", "id": "append_signature"},
-            {"type": "tool", "id": "send_reply"},
+            {"type": "agent", "id": "assess_human_takeover", "skip_conditions": {"demo-detect_opt_out_result": True}},
+            {"type": "tool", "id": "demo-append_signature"},
+            {"type": "tool", "id": "demo-send_reply",
+             "arguments": {"append_signature_result": {"type": "static", "value": "demo-append_signature_result"}}},
         ],
     }
 }
@@ -66,8 +68,8 @@ AGENTS = {
                 '{incoming_message}'
             )
         ],
-        "tools": ["get_conversation_history", "get_appointment_hours", "get_inventory_information",
-                  "schedule_appointment", "get_current_time", ],
+        "tools": ["demo-get_conversation_history", "demo-get_appointment_hours", "demo-get_inventory_information",
+                  "demo-schedule_appointment", "demo-get_current_time"],
         "sub-agents": [],
         "dependencies": [
             {"key": "preferred_tone", "default_value": "polite", "override": True},

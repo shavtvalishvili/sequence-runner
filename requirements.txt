@@ -9,3 +9,5 @@ langchain
 pydantic
 jsonschema-pydantic
 nest-asyncio
+
+-r mcp-server/requirements.txt

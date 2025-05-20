@@ -3,11 +3,12 @@ import os
 from langchain_mcp_adapters.tools import load_mcp_tools
 from langgraph.graph.graph import CompiledGraph
 from mcp import ClientSession
-from mcp.client.sse import sse_client
+from mcp.client.stdio import stdio_client
 
 from src.agent.agent_factory import AgentFactory
 from src.graph.graph_builder import GraphBuilder
 from src.sequence.sequence_config_loader import SequenceConfigLoader
+from src.tools.constants import SERVER_PARAMETERS
 from src.tools.tool_invoker import ToolInvoker
 
 
@@ -56,11 +57,11 @@ class SequenceRunner:
         if len(self.sequence) == 0:
             raise RuntimeError("Must call load_configurations() first")
 
-        # ToDo: Discuss if we should make sure that client_config is in the state for get_step_context
+        # Guarantee to include client_id in the initial state
         self.initial_state.setdefault("client_id", self.client_id)
 
         # Open MCP session & load raw tools
-        async with sse_client(os.environ["MCP_SERVER_URL"]) as (r, w), ClientSession(r, w) as session:
+        async with stdio_client(SERVER_PARAMETERS) as (r, w), ClientSession(r, w) as session:
             await session.initialize()
             mcp_tools = await load_mcp_tools(session)
 
