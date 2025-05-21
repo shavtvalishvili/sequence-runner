@@ -73,7 +73,7 @@ jobs:
             python-version: ${{ env.python-version }}
       
 
-      - run: npm install -g serverless
+      - run: npm install -g serverless@v3
       - run: sls plugin install -n serverless-python-requirements
       - run: sls plugin install -n serverless-offline
       - run: serverless deploy --stage ${{ vars.STAGE }}
