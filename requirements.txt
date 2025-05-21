@@ -1,13 +1,13 @@
-pydantic_core
-python-dotenv
-langgraph
-mcp
-langchain-mcp-adapters
-langchain-openai
-langchain_core
-langchain
-pydantic
-jsonschema-pydantic
-nest-asyncio
+pydantic_core~=2.33.2
+python-dotenv~=1.1.0
+langgraph~=0.4.5
+mcp~=1.9.0
+langchain-mcp-adapters~=0.1.1
+langchain-openai~=0.3.17
+langchain-core~=0.3.60
+langchain~=0.3.25
+pydantic~=2.11.4
+jsonschema_pydantic~=0.6
+nest-asyncio~=1.6.0
 
 -r mcp-server/requirements.txt
