@@ -1,4 +1,4 @@
-service: mock-sequence-service
+service: agent-platform-sequence-runner
 
 provider:
   name: aws
