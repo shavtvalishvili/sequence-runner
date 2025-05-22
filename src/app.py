@@ -1,3 +1,5 @@
+import asyncio
+
 from dotenv import load_dotenv
 
 from src.data.secrets_manager import SecretsManager
@@ -5,10 +7,7 @@ from src.sequence.sequence_runner import SequenceRunner
 import traceback
 import nest_asyncio
 
-
-async def lambda_handler(event, _context):
-    nest_asyncio.apply()
-
+async def async_lambda_handler(event, _context):
     load_dotenv()
     secretsManager = SecretsManager()
     secretsManager.update_env_with_secrets()
@@ -26,3 +25,8 @@ async def lambda_handler(event, _context):
     except Exception as e:
         print(traceback.format_exc())
         return {"status": "error", "message": str(e)}
+
+def lambda_handler(event, _context):
+    nest_asyncio.apply()
+
+    return asyncio.run(async_lambda_handler(event, _context))
