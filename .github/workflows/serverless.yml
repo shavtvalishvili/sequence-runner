@@ -8,7 +8,7 @@ on:
 
 env:
   node-version: 18
-  python-version: 3.12
+  python-version: 3.13
 
 permissions:
   id-token: write
@@ -56,15 +56,19 @@ jobs:
         with:
           node-version: ${{ env.node-version }}
 
-      - name: Setup Python
+      - name: Setup Python and UV
         uses: actions/setup-python@v3
         with:
           python-version: ${{ env.python-version }}
 
+      - name: Install uv & sync
+        run: |
+          pip install uv
+          uv sync
+
       - name: Install Serverless CLI and plugins
         run: |
           npm install -g serverless@v3
-          sls plugin install -n serverless-python-requirements
           sls plugin install -n serverless-offline
 
       - name: Deploy with Serverless
@@ -73,4 +77,4 @@ jobs:
           LANGSMITH_ENDPOINT: ${{ vars.LANGSMITH_ENDPOINT }}
           LANGSMITH_PROJECT: ${{ vars.LANGSMITH_PROJECT }}
           ENV: ${{ vars.ENV }}
-        run: serverless deploy --stage ${{ vars.ENV }}
+        run: uv run serverless deploy --stage ${{ vars.ENV }}

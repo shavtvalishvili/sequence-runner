@@ -1,8 +1,16 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
 # Virtual environments
-venv/
+.venv
+
+# JetBrains directory
+.idea
 
 # Environment variables
 .env
-
-# JetBrains IDEs
-.idea/
