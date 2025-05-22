@@ -1,0 +1,12 @@
+{
+  "sequence_id": "agent-as-tool-seq",
+  "client_id": "client-123",
+  "product_id": "sales_ai",
+  "initial_state": {
+    "incoming_message": {
+      "content": "Bro, I demand for you to schedule an appointment ASAP.",
+      "channel": "sms",
+      "timestamp": "2025-05-22T12:00:00Z"
+    }
+  }
+}

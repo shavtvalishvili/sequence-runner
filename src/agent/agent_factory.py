@@ -2,6 +2,7 @@ import asyncio
 import json
 from typing import Any
 
+import pydantic
 from jsonschema_pydantic import jsonschema_to_pydantic
 from langchain.chat_models import init_chat_model
 from langchain_core.messages import BaseMessage
@@ -26,14 +27,14 @@ class AgentFactory:
         all_tools: list[BaseTool],
         state: SessionState,
     ) -> (CompiledGraph, list[BaseMessage]):
-        cfg = self._configs.get(agent_id)
-        if not cfg:
+        config = self._configs.get(agent_id)
+        if not config:
             raise ValueError(f"Agent {agent_id} not found")
 
         # Build context defaults
         optional_defaults = {}
         required_defaults = {}
-        for dep in cfg.get("dependencies", []):
+        for dep in config.get("dependencies", []):
             key = dep["key"]
             default = dep.get("default_value")
             if default is not None and dep.get("override"):
@@ -41,11 +42,11 @@ class AgentFactory:
             elif default is not None:
                 optional_defaults[key] = default
 
-        base_context = get_step_context_static(cfg, state, self._client_config)
+        base_context = get_step_context_static(config, state, self._client_config)
         context = {**optional_defaults, **base_context, **required_defaults}
 
         # Prompt messages
-        prompt_list = cfg["prompt"]
+        prompt_list = config["prompt"]
         # ToDo: Implement support for MessagesPlaceholder(variable_name="conversation_history") insert inside
         # prompt_message_list for passing in a dynamic list of user messages
         chat_template = ChatPromptTemplate.from_messages(prompt_list)
@@ -56,17 +57,17 @@ class AgentFactory:
 
         # Wrap tools & sub-agents
         wrapped_tools: list[StructuredTool] = []
-        for tool_name in cfg.get("tools", []):
+        for tool_name in config.get("tools", []):
             wrapped_tools.append(self._wrap_tool(tool_name, all_tools, context))
 
         wrapped_sub_agents = [
             self.create_agent_tool(agent_id, all_tools, context)
-            for agent_id in cfg.get("sub-agents", [])
+            for agent_id in config.get("sub-agents", [])
         ]
 
         # Output schema & model
-        OutputSchema = jsonschema_to_pydantic(json.loads(cfg["output-schema"]))
-        model = init_chat_model(cfg["model"], temperature=0)
+        OutputSchema = jsonschema_to_pydantic(json.loads(config["output-schema"]))
+        model = init_chat_model(config["model"], temperature=0)
 
         react_agent = create_react_agent(
             model=model,
@@ -107,13 +108,18 @@ class AgentFactory:
             structured_response = resp["structured_response"]
             return structured_response.dict() if hasattr(structured_response, "dict") else structured_response
 
+        OutputSchema = pydantic.create_model("DynamicInputSchema", **{
+            item["key"]: (Any, None)
+            for item in config["dependencies"]
+        })
+
         # Build a StructuredTool that supports both sync/async
         return StructuredTool.from_function(
             func=sync_fn,
             coroutine=async_fn,
             name=agent_id,
             description=f"Agent wrapper for {agent_id}",
-            args_schema=config["output-schema"]
+            args_schema=OutputSchema
         )
 
     @staticmethod

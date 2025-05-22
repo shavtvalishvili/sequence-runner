@@ -7,7 +7,6 @@
       "content": "Yes, I would like to schedule an appointment.",
       "channel": "email",
       "timestamp": "2025-05-01T12:00:00Z"
-    },
-    "client_id": "client-xyz"
+    }
   }
 }

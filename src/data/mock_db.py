@@ -21,6 +21,13 @@ SEQUENCES = {
             {"type": "tool", "id": "demo-send_reply",
              "arguments": {"append_signature_result": {"type": "static", "value": "demo-append_signature_result"}}},
         ],
+    },
+    "agent-as-tool-seq": {
+        "id": "agent-as-tool-seq",
+        "steps": [
+            {"type": "agent", "id": "mock-customer",
+             "arguments": {"incoming_message": {"type": "dynamic", "value": 'incoming_message["content"]'}}}
+        ],
     }
 }
 
@@ -124,7 +131,69 @@ AGENTS = {
             },
             "required": ["hto_required"]
         })
-    }
+    },
+    "mock-customer": {
+        "id": "mock-customer",
+        "name": "CustomerMockerAgent",
+        "model": "openai:gpt-4.1",
+        "prompt": [
+            (
+                'system',
+                'Use the detect-tone tool to detect the tone of the user message and generate a reply mocking them in a similar tone.'
+            ),
+            (
+                'user',
+                '{incoming_message}'
+            )
+        ],
+        "tools": [],
+        "sub-agents": ["detect-tone"],
+        "dependencies": [{"key": "incoming_message", "default_value": None, "override": False}],
+        "output-schema": json.dumps({
+            "type": "object",
+            "properties": {
+                "reply": {"type": "string"}
+            },
+            "required": ["reply"]
+        })
+    },
+    "detect-tone": {
+        "id": "detect-tone",
+        "name": "CustomerMockerAgent",
+        "model": "openai:gpt-4.1",
+        "prompt": [
+            (
+                'system',
+                'Detect the tone of the user message and categorize it into one of these categories:\n'
+                '- Polite\n'
+                '- Angry\n'
+                '- Happy\n'
+                '- Neutral\n'
+                '- Sarcastic\n'
+                '- Annoyed\n'
+                '- Disappointed\n'
+                '- Excited\n'
+                '- Confused\n'
+                '- Bored\n'
+                '- Frustrated\n'
+                '- Curious\n'
+            ),
+            (
+                'user',
+                '{incoming_message}'
+            )
+        ],
+        "tools": [],
+        "sub-agents": [],
+        "dependencies": [{"key": "incoming_message", "default_value": None, "override": False}],
+        "output-schema": json.dumps({
+            "type": "object",
+            "properties": {
+                "tone": {"type": "string"}
+            },
+            "required": ["tone"]
+        })
+    },
 }
 
 CLIENT_CONFIGS = {
