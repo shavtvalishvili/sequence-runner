@@ -15,12 +15,12 @@ provider:
         - secretsmanager:GetSecretValue
         - secretsmanager:DescribeSecret
       Resource:
-        - arn:aws:secretsmanager:${self:provider.region}:#{AWS::AccountId}:secret:${env:ENV}/agent-platform-sequence-runner-*
+        - arn:aws:secretsmanager:${self:provider.region}:${aws:accountId}:secret:${env:ENV}/agent-platform-sequence-runner-*
 
 
 functions:
   runSequence:
-    handler: app.lambda_handler
+    handler: src.app.lambda_handler
     events:
       - http:
           path: process
