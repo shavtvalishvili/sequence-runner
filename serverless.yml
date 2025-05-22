@@ -2,15 +2,22 @@ service: agent-platform-sequence-runner
 
 provider:
   name: aws
-  runtime: python3.12
+  runtime: python3.13
   region: us-west-2
   environment:
     PLATFORM_CONFIGS_URL: ${env:PLATFORM_CONFIGS_URL}
-    OPENAI_API_KEY=: ${env:OPENAI_API_KEY}
     LANGSMITH_TRACING: ${env:LANGSMITH_TRACING}
     LANGSMITH_ENDPOINT: ${env:LANGSMITH_ENDPOINT}
-    LANGSMITH_API_KEY: ${env:LANGSMITH_API_KEY}
     LANGSMITH_PROJECT: ${env:LANGSMITH_PROJECT}
+    ENV: ${env:ENV}
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - secretsmanager:GetSecretValue
+        - secretsmanager:DescribeSecret
+      Resource:
+        - arn:aws:secretsmanager:${self:provider.region}:#{AWS::AccountId}:secret:${env:ENV}/agent-platform-sequence-runner-*
+
 
 functions:
   runSequence:

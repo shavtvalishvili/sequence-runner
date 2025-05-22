@@ -1,5 +1,6 @@
 from dotenv import load_dotenv
 
+from src.data.secrets_manager import SecretsManager
 from src.sequence.sequence_runner import SequenceRunner
 import traceback
 import nest_asyncio
@@ -7,7 +8,11 @@ import nest_asyncio
 
 async def lambda_handler(event, _context):
     nest_asyncio.apply()
+
     load_dotenv()
+    secretsManager = SecretsManager()
+    secretsManager.update_env_with_secrets()
+
     sequence_id = event["sequence_id"]
     client_id = event["client_id"]
     product_id = event["product_id"]
