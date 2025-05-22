@@ -6,74 +6,71 @@ on:
       - master
       - dev
 
-
 env:
   node-version: 18
   python-version: 3.12
-
 
 permissions:
   id-token: write
   contents: read
 
 jobs:
-    deploy:
-      name: Deploy to dynamic env
-      runs-on: ubuntu-latest
-      environment: |-
-        ${{
-            github.ref_name == 'master' && 'prod'
-        || github.ref_name == 'dev'    && 'dev'
-        ||                                'dev'
-        }}
+  deploy:
+    name: Deploy to dynamic env
+    runs-on: ubuntu-latest
 
+    environment:
+      name: ${{ github.ref_name == 'master' && 'prod' || github.ref_name == 'dev' && 'dev' || 'dev' }}
 
-      steps:
-
-      - name: Project Checkout 
+    steps:
+      - name: Project Checkout
         uses: actions/checkout@v4
-      
+
       - name: Setup SSH for submodules
         run: |
-            mkdir -p ~/.ssh
-            echo "${{ secrets.SUBMODULE_SSH_KEY }}" > ~/.ssh/id_ed25519
-            chmod 600 ~/.ssh/id_ed25519
-            ssh-keyscan github.com >> ~/.ssh/known_hosts
-            git config --global core.sshCommand "ssh -i ~/.ssh/id_ed25519 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
-            git config --global url."git@github.com:".insteadOf "https://github.com/"
-
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SUBMODULE_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+          git config --global core.sshCommand "ssh -i ~/.ssh/id_ed25519 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
+          git config --global url."git@github.com:".insteadOf "https://github.com/"
 
       - name: Test SSH access to submodule
         run: ssh -T git@github.com || true
-  
 
       - name: Submodule checkout
         uses: actions/checkout@v4
         with:
-            repository: swipetospin/agent-platform-mcp-server
-            path: mcp-server
-            ssh-key: ${{ secrets.SUBMODULE_SSH_KEY }}
-
+          repository: swipetospin/agent-platform-mcp-server
+          path: mcp-server
+          ssh-key: ${{ secrets.SUBMODULE_SSH_KEY }}
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ vars.AWS_OIDC_ROLE_ARN }}
-          aws-region: ${{ vars.AWS_DEFAULT_REGION}}
+          aws-region: ${{ vars.AWS_DEFAULT_REGION }}
 
-      
-      - name: Setup Node.js ${{ env.node-version }}
+      - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-            node-version: ${{ env.node-version }}
-     
- 
-      - uses: actions/setup-python@v3
-        with:
-            python-version: ${{ env.python-version }}
-      
+          node-version: ${{ env.node-version }}
 
-      - run: npm install -g serverless@v3
-      - run: sls plugin install -n serverless-python-requirements
-      - run: sls plugin install -n serverless-offline
-      - run: serverless deploy --stage ${{ vars.ENV }}
+      - name: Setup Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ env.python-version }}
+
+      - name: Install Serverless CLI and plugins
+        run: |
+          npm install -g serverless@v3
+          sls plugin install -n serverless-python-requirements
+          sls plugin install -n serverless-offline
+
+      - name: Deploy with Serverless
+        env:
+          LANGSMITH_TRACING: ${{ vars.LANGSMITH_TRACING }}
+          LANGSMITH_ENDPOINT: ${{ vars.LANGSMITH_ENDPOINT }}
+          LANGSMITH_PROJECT: ${{ vars.LANGSMITH_PROJECT }}
+          ENV: ${{ vars.ENV }}
+        run: serverless deploy --stage ${{ vars.ENV }}

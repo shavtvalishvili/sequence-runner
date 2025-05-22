@@ -5,7 +5,6 @@ provider:
   runtime: python3.13
   region: us-west-2
   environment:
-    PLATFORM_CONFIGS_URL: ${env:PLATFORM_CONFIGS_URL}
     LANGSMITH_TRACING: ${env:LANGSMITH_TRACING}
     LANGSMITH_ENDPOINT: ${env:LANGSMITH_ENDPOINT}
     LANGSMITH_PROJECT: ${env:LANGSMITH_PROJECT}
