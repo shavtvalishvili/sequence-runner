@@ -24,6 +24,7 @@ class SequenceRunner:
         self.client_id = client_id
         self.product_id = product_id
         self.initial_state = initial_state
+        self.final_state = None
 
         # injected collaborators
         self.config_loader = SequenceConfigLoader()
@@ -68,4 +69,6 @@ class SequenceRunner:
             compiled: CompiledGraph = graph.compile()
 
             # Kick off the sequence
-            await compiled.ainvoke(self.initial_state)
+            self.final_state = await compiled.ainvoke(self.initial_state)
+
+            return self.final_state

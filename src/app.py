@@ -1,4 +1,6 @@
 import asyncio
+import json
+from http import HTTPStatus
 
 from dotenv import load_dotenv
 
@@ -6,6 +8,7 @@ from src.data.secrets_manager import SecretsManager
 from src.sequence.sequence_runner import SequenceRunner
 import traceback
 import nest_asyncio
+
 
 async def async_lambda_handler(event, _context):
     load_dotenv()
@@ -20,11 +23,12 @@ async def async_lambda_handler(event, _context):
     try:
         sequence_runner = SequenceRunner(sequence_id, client_id, product_id, initial_state)
         await sequence_runner.load_configurations()
-        await sequence_runner.run_sequence_async()
-        return {"status": "success"}
+        final_graph_state = await sequence_runner.run_sequence_async()
+        return {"statusCode": HTTPStatus.OK, "body": json.dumps(final_graph_state)}
     except Exception as e:
         print(traceback.format_exc())
-        return {"status": "error", "message": str(e)}
+        return {"statusCode": HTTPStatus.INTERNAL_SERVER_ERROR, "body": json.dumps({"message": str(e)})}
+
 
 def lambda_handler(event, _context):
     nest_asyncio.apply()
