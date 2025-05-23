@@ -505,7 +505,7 @@ wheels = [
 [[package]]
 name = "mcp-server"
 version = "0.1.0"
-source = { editable = "mcp-server" }
+source = { virtual = "mcp-server" }
 dependencies = [
     { name = "fastmcp" },
 ]
@@ -839,7 +839,7 @@ requires-dist = [
     { name = "langchain-openai", specifier = "~=0.3.17" },
     { name = "langgraph", specifier = "~=0.4.5" },
     { name = "mcp", specifier = "~=1.9.0" },
-    { name = "mcp-server", editable = "mcp-server" },
+    { name = "mcp-server", virtual = "mcp-server" },
     { name = "nest-asyncio", specifier = "~=1.6.0" },
     { name = "pydantic", specifier = "~=2.11.4" },
     { name = "pydantic-core", specifier = "~=2.33.2" },

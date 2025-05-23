@@ -64,12 +64,15 @@ jobs:
       - name: Install uv & sync
         run: |
           pip install uv
-          uv sync
 
       - name: Install Serverless CLI and plugins
         run: |
           npm install -g serverless@v3
+          sls plugin install -n serverless-python-requirements
           sls plugin install -n serverless-offline
+
+      - name: Generate requirements.txt from pyproject.toml
+        run: uv pip compile pyproject.toml -o requirements.txt
 
       - name: Deploy with Serverless
         env:
@@ -77,4 +80,4 @@ jobs:
           LANGSMITH_ENDPOINT: ${{ vars.LANGSMITH_ENDPOINT }}
           LANGSMITH_PROJECT: ${{ vars.LANGSMITH_PROJECT }}
           ENV: ${{ vars.ENV }}
-        run: uv run serverless deploy --stage ${{ vars.ENV }}
+        run: serverless deploy --stage ${{ vars.ENV }}

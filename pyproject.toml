@@ -20,4 +20,7 @@ dependencies = [
 ]
 
 [tool.uv.sources]
-mcp-server = { path = "./mcp-server", editable = true }
+mcp-server = { path = "./mcp-server" }
+
+[tool.uv.pip]
+no-emit-package = ["mcp-server"]
