@@ -1,4 +1,3 @@
-import asyncio
 import json
 from src.app import lambda_handler
 
