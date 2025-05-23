@@ -1,13 +1,12 @@
 import asyncio
 import json
-from http import HTTPStatus
-
-from dotenv import load_dotenv
-
-from src.data.secrets_manager import SecretsManager
-from src.sequence.sequence_runner import SequenceRunner
 import traceback
 import nest_asyncio
+from http import HTTPStatus
+from dotenv import load_dotenv
+from src.data.secrets_manager import SecretsManager
+from src.sequence.sequence_runner import SequenceRunner
+from langsmith import Client as LangSmithClient
 
 
 async def async_lambda_handler(event, _context):
@@ -20,14 +19,18 @@ async def async_lambda_handler(event, _context):
     product_id = event["product_id"]
     initial_state = event.get("initial_state")
 
+    langsmith_client = LangSmithClient()
     try:
         sequence_runner = SequenceRunner(sequence_id, client_id, product_id, initial_state)
         await sequence_runner.load_configurations()
         final_graph_state = await sequence_runner.run_sequence_async()
-        return {"statusCode": HTTPStatus.OK, "body": json.dumps(final_graph_state)}
+        response = {"statusCode": HTTPStatus.OK, "body": json.dumps(final_graph_state)}
     except Exception as e:
         print(traceback.format_exc())
-        return {"statusCode": HTTPStatus.INTERNAL_SERVER_ERROR, "body": json.dumps({"message": str(e)})}
+        response = {"statusCode": HTTPStatus.INTERNAL_SERVER_ERROR, "body": json.dumps({"message": str(e)})}
+    langsmith_client.flush()
+
+    return response
 
 
 def lambda_handler(event, _context):
