@@ -13,11 +13,12 @@ async def async_lambda_handler(event, _context):
     load_dotenv()
     secretsManager = SecretsManager()
     secretsManager.update_env_with_secrets()
+    payload = json.loads(event.get("body", "{}"))
 
-    sequence_id = event["sequence_id"]
-    client_id = event["client_id"]
-    product_id = event["product_id"]
-    initial_state = event.get("initial_state")
+    sequence_id = payload["sequence_id"]
+    client_id = payload["client_id"]
+    product_id = payload["product_id"]
+    initial_state = payload.get("initial_state")
 
     langsmith_client = LangSmithClient()
     try:
