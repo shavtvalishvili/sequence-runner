@@ -1,6 +1,7 @@
 [project]
 name = "sequence-runner"
 version = "0.1.0"
+description = "A modular sequence execution framework"
 requires-python = ">=3.13.3"
 dependencies = [
   "pydantic_core ~=2.33.2",
@@ -19,8 +20,53 @@ dependencies = [
   "mcp-server"
 ]
 
+[tool.uv]
+default-groups = []
+
 [tool.uv.sources]
 mcp-server = { path = "./mcp-server" }
 
 [tool.uv.pip]
 no-emit-package = ["mcp-server"]
+
+[dependency-groups]
+lint = [
+  "black>=25.1.0",
+  "isort>=6.0.1",
+  "pre-commit>=4.2.0",
+  "ruff>=0.11.12",
+]
+typecheck = [
+  "mypy>=1.16.0",
+  "pydantic>=2.11.4"
+]
+
+[tool.black]
+line-length = 88
+target-version = ["py313"]
+include = "\\.pyi?$"
+
+[tool.isort]
+profile = "black"
+line_length = 88
+skip_gitignore = true
+
+[tool.ruff]
+line-length = 88
+target-version = "py313"
+select = ["E", "F", "I", "C"]
+fix = true
+respect-gitignore = true
+
+[tool.mypy]
+python_version = "3.13"
+warn_unused_configs = true
+warn_return_any = true
+disallow_untyped_defs = true
+ignore_missing_imports = true
+exclude_gitignore = true
+plugins = ["pydantic.mypy"]
+
+[tool.pydantic-mypy]
+init_typed = true
+warn_required_dynamic_aliases = true

@@ -1,0 +1,56 @@
+repos:
+  - repo: https://github.com/pycqa/isort
+    rev: 6.0.1
+    hooks:
+      - id: isort
+        name: Sort Python imports
+        language_version: python3
+        args:
+          - "--profile=black"
+        files: \.pyi?$
+
+  - repo: https://github.com/psf/black
+    rev: 25.1.0
+    hooks:
+      - id: black
+        name: Format Python code with Black
+        language_version: python3
+        files: \.pyi?$
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.11.12
+    hooks:
+      - id: ruff
+        name: Lint & fix Python with Ruff
+        language_version: python3
+        args:
+          - "--fix"
+          - "--exit-zero"
+        files: \.pyi?$
+      - id: ruff-format
+        name: Ruff code formatting (import grouping, etc.)
+        language_version: python3
+        files: \.pyi?$
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-yaml
+        files: \.(yml|yaml)$
+      - id: check-json
+        files: \.json$
+      - id: check-toml
+        files: \.toml$
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: check-merge-conflict
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.16.0
+    hooks:
+     - id: mypy
+       name: Type‐check Python with MyPy
+       args:
+         - "--ignore-missing-imports"
+       language_version: python3
+       files: \.pyi?$
