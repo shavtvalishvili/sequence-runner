@@ -52,5 +52,12 @@ repos:
        name: Type‐check Python with MyPy
        args:
          - "--ignore-missing-imports"
+         - "--disallow-untyped-defs"
+         - "--check-untyped-defs"
+         - "--warn-unused-ignores"
+         - "--show-error-codes"
+         - "--pretty"
+       additional_dependencies:
+         - pydantic
        language_version: python3
        files: \.pyi?$

@@ -54,7 +54,7 @@ skip_gitignore = true
 [tool.ruff]
 line-length = 88
 target-version = "py313"
-select = ["E", "F", "I", "C"]
+lint.select = ["E", "F", "I", "C"]
 fix = true
 respect-gitignore = true
 

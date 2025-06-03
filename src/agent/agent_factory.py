@@ -7,17 +7,19 @@ from jsonschema_pydantic import jsonschema_to_pydantic
 from langchain.chat_models import init_chat_model
 from langchain_core.messages import BaseMessage
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.tools import BaseTool, tool, StructuredTool
+from langchain_core.tools import BaseTool, StructuredTool, tool
 from langgraph.graph.graph import CompiledGraph
 from langgraph.prebuilt import create_react_agent
 
-from src.state.session_state import SessionState
+from src.agent.types import Agent, Dependency
 from src.sequence.step_utils import get_step_context_static
+from src.sequence.types import Arguments
+from src.state.session_state import SessionState
 from src.tools.tool_invoker import ToolInvoker
 
 
 class AgentFactory:
-    def __init__(self, agents_config: dict[str, dict], client_config: dict[str, dict]):
+    def __init__(self, agents_config: dict[str, Agent], client_config: dict[str, Any]):
         self._configs = agents_config
         self._client_config = client_config
 
@@ -26,9 +28,11 @@ class AgentFactory:
         agent_id: str,
         all_tools: list[BaseTool],
         state: SessionState,
-    ) -> (CompiledGraph, list[BaseMessage]):
-        config = self._configs.get(agent_id)
-        if not config:
+        arguments: Arguments,
+    ) -> tuple[CompiledGraph, list[BaseMessage]]:
+        try:
+            config = self._configs[agent_id]
+        except:
             raise ValueError(f"Agent {agent_id} not found")
 
         # Build context defaults
@@ -42,7 +46,7 @@ class AgentFactory:
             elif default is not None:
                 optional_defaults[key] = default
 
-        base_context = get_step_context_static(config, state, self._client_config)
+        base_context = get_step_context_static(arguments, state, self._client_config)
         context = {**optional_defaults, **base_context, **required_defaults}
 
         # Prompt messages
@@ -61,12 +65,12 @@ class AgentFactory:
             wrapped_tools.append(self._wrap_tool(tool_name, all_tools, context))
 
         wrapped_sub_agents = [
-            self.create_agent_tool(agent_id, all_tools, context)
-            for agent_id in config.get("sub-agents", [])
+            self.create_agent_tool(agent_id, all_tools, context, arguments)
+            for agent_id in config.get("sub_agents", [])
         ]
 
         # Output schema & model
-        OutputSchema = jsonschema_to_pydantic(json.loads(config["output-schema"]))
+        OutputSchema = jsonschema_to_pydantic(json.loads(config["output_schema"]))
         model = init_chat_model(config["model"], temperature=0)
 
         react_agent = create_react_agent(
@@ -78,40 +82,59 @@ class AgentFactory:
         return react_agent, messages
 
     def create_agent_tool(
-            self,
-            agent_id: str,
-            all_tools: list[BaseTool],
-            context: dict
+        self,
+        agent_id: str,
+        all_tools: list[BaseTool],
+        context: dict,
+        arguments: Arguments,
     ) -> BaseTool:
         """
         Wraps a child agent as a sync/async tool, so it can be called
         as a sub-agent from another agent.
         """
-        react_agent, messages = self.create_agent(agent_id, all_tools, context)
-        config = self._configs.get(agent_id)
+        react_agent, messages = self.create_agent(
+            agent_id, all_tools, context, arguments
+        )
+        try:
+            config = self._configs[agent_id]
+        except:
+            raise ValueError(f"Agent {agent_id} not found")
 
         # ToDo: Make sure to support all outputs from the agent
         @tool(description=f"Sub-agent tool for {agent_id}")
-        def sync_fn(**tool_kwargs) -> Any:
+        def sync_fn(**tool_kwargs: Any) -> Any:
             merged = {**tool_kwargs, **context}
-            return react_agent.invoke({
-                "messages": messages,
-                **merged,
-            })
+            return react_agent.invoke(
+                {
+                    "messages": messages,
+                    **merged,
+                }
+            )
 
-        async def async_fn(**tool_kwargs):
+        async def async_fn(**tool_kwargs: Any) -> Any:
             merged = {**tool_kwargs, **context}
-            resp = await react_agent.ainvoke({
-                "messages": messages,
-                **merged,
-            })
+            resp = await react_agent.ainvoke(
+                {
+                    "messages": messages,
+                    **merged,
+                }
+            )
             structured_response = resp["structured_response"]
-            return structured_response.dict() if hasattr(structured_response, "dict") else structured_response
+            return (
+                # ToDo: .model_dump instead of .dict, duplicate code
+                structured_response.dict()
+                if hasattr(structured_response, "dict")
+                else structured_response
+            )
 
-        OutputSchema = pydantic.create_model("DynamicInputSchema", **{
-            item["key"]: (Any, None)
-            for item in config["dependencies"]
-        })
+        input_fields: dict[str, Any] = {}
+        dependencies: list[Dependency] = config["dependencies"]
+        for item in dependencies:
+            input_fields[item["key"]] = (Any, None)
+        OutputSchema = pydantic.create_model(
+            "DynamicInputSchema",
+            **input_fields,
+        )
 
         # Build a StructuredTool that supports both sync/async
         return StructuredTool.from_function(
@@ -119,22 +142,20 @@ class AgentFactory:
             coroutine=async_fn,
             name=agent_id,
             description=f"Agent wrapper for {agent_id}",
-            args_schema=OutputSchema
+            args_schema=OutputSchema,
         )
 
     @staticmethod
     def _wrap_tool(
-            tool_name: str,
-            all_tools: list[BaseTool],
-            context: dict
+        tool_name: str, all_tools: list[BaseTool], context: dict
     ) -> StructuredTool:
         original_tool = next(t for t in all_tools if t.name == tool_name)
 
-        async def _async_wrapper(**kwargs):
+        async def _async_wrapper(**kwargs: Any) -> Any:
             merged = {**kwargs, **context}
             return await ToolInvoker.invoke(original_tool, merged)
 
-        def _sync(**kw):
+        def _sync(**kw: Any) -> Any:
             return asyncio.run(_async_wrapper(**kw))
 
         return StructuredTool.from_function(

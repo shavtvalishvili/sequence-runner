@@ -1,12 +1,18 @@
 import asyncio
 from typing import Any
 
+from langchain_core.tools import BaseTool
+
 
 class ToolInvoker:
     @staticmethod
-    async def invoke(step_tool: Any, tool_context: dict) -> Any:
+    async def invoke(step_tool: BaseTool, tool_context: dict) -> Any:
         # Filter the tool_context to only include keys that are in step_tool.args_schema
-        filtered_context = {key: value for key, value in tool_context.items() if key in step_tool.args.keys()}
+        filtered_context = {
+            key: value
+            for key, value in tool_context.items()
+            if key in step_tool.args.keys()
+        }
 
         # Async entrypoint
         if callable(getattr(step_tool, "ainvoke", None)):
