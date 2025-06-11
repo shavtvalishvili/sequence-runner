@@ -155,8 +155,9 @@ class AgentFactory:
             merged = {**kwargs, **context}
             return await ToolInvoker.invoke(original_tool, merged)
 
-        def _sync(**kw: Any) -> Any:
-            return asyncio.run(_async_wrapper(**kw))
+        def _sync(**kwargs: Any) -> Any:
+            merged = {**kwargs, **context}
+            return asyncio.run(_async_wrapper(**merged))
 
         return StructuredTool.from_function(
             func=_sync,
